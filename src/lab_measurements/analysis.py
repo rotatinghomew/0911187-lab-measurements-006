@@ -1,26 +1,32 @@
-"""实验重复测量 的描述性汇总。"""
+"""分开呈现实验批次分布与受试对象内的配对差异。"""
 
 from collections import defaultdict
+from .pairing import paired_values
 
 
-def summarize(records, group_field, value_field):
-    groups = defaultdict(list)
+def summarize(records):
+    batches = defaultdict(list)
     for record in records:
-        group = record.get(group_field)
-        value = record.get(value_field)
-        if group is None:
-            continue
-        if isinstance(value, (int, float)) and not isinstance(value, bool):
-            groups[str(group)].append(float(value))
-        else:
-            groups[str(group)]
-    result = {}
-    for group, values in sorted(groups.items()):
-        result[group] = {
-            "observed": len(values),
-            "missing": sum(1 for record in records if str(record.get(group_field)) == group and not isinstance(record.get(value_field), (int, float))),
+        key = (str(record["method"]), str(record["batch"]))
+        batches[key].append(record)
+    batch_results = {}
+    for (method, batch), rows in sorted(batches.items()):
+        values = [float(row["value"]) for row in rows if row.get("value") is not None]
+        batch_results[f"{method}:{batch}"] = {
+            "sample_count": len(rows),
+            "observed_count": len(values),
             "mean": sum(values) / len(values) if values else None,
             "minimum": min(values) if values else None,
             "maximum": max(values) if values else None,
         }
-    return result
+    methods = sorted({str(row["method"]) for row in records})
+    differences = defaultdict(list)
+    if len(methods) >= 2:
+        for pair in paired_values(records, methods[:2]):
+            values = pair["values"]
+            differences[f"{methods[0]}-{methods[1]}"].append(values[methods[0]] - values[methods[1]])
+    paired_results = {
+        key: {"paired_subjects": len(values), "mean_difference": sum(values) / len(values) if values else None}
+        for key, values in sorted(differences.items())
+    }
+    return {"batches": batch_results, "paired_differences": paired_results}

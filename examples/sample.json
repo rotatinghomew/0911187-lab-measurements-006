@@ -1,20 +1,7 @@
 [
-  {
-    "id": "sample-1",
-    "period": "2026-S1",
-    "group": "A",
-    "value": 2
-  },
-  {
-    "id": "sample-2",
-    "period": "2026-S1",
-    "group": "A",
-    "value": null
-  },
-  {
-    "id": "sample-3",
-    "period": "2026-S2",
-    "group": "B",
-    "value": 4
-  }
+  {"id":"m-1","subject":"s-01","batch":"b-1","method":"reference","replicate":1,"value":10.2},
+  {"id":"m-2","subject":"s-01","batch":"b-1","method":"candidate","replicate":1,"value":9.6},
+  {"id":"m-3","subject":"s-02","batch":"b-1","method":"reference","replicate":1,"value":13.1},
+  {"id":"m-4","subject":"s-02","batch":"b-1","method":"candidate","replicate":1,"value":null},
+  {"id":"m-5","subject":"s-03","batch":"b-2","method":"reference","replicate":1,"value":18.5}
 ]

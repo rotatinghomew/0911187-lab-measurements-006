@@ -1,17 +1,7 @@
-# 实验重复测量
+# 实验室重复测量分析
 
-实验样本、重复测量和仪器批次通过稳定标识关联。
+项目分析不同测量方法在多个实验批次和受试对象上的重复结果。本地合成记录以 `id` 唯一标识，包含 `subject`、`batch`、`method`、`replicate` 和可空的 `value`。
 
-## 数据约定
+报告将批次内观察分布与对象内成对方法差异分开，列出各自的样本数；不完整配对不会被补成零。当前结果仍按输入文件中的现行数据计算，未保存批次重标或测量更正前的已发布解释。
 
-应用使用本地合成记录，输入为 UTF-8 JSON。每条记录都应有稳定的业务标识；日期采用 ISO 8601 格式。缺失值表示未观察到，不解释为数值零。输入校验、领域整理和结果汇总彼此分离，调用方可通过 Python API 使用。
-
-## 运行与测试
-
-需要 Python 3.11 或更新版本，不依赖外部服务。执行 `python -m unittest discover -s tests -v` 运行测试。将 `src` 加入 `PYTHONPATH` 后可导入 `lab_measurements`；核心示例见 `examples/sample.json`。
-
-## 目录
-
-- `src/lab_measurements/`：记录读取、领域计算及结果汇总。
-- `examples/`：本地合成数据。
-- `tests/`：输入边界与当前业务口径测试。
+需要 Python 3.11 或更新版本，无外部服务。执行 `PYTHONPATH=src python -m unittest discover -s tests -v` 运行测试。`lab_measurements.facts` 校验记录，`lab_measurements.pairing.paired_values` 构造对象/批次内完整测量对，`lab_measurements.analysis.summarize` 计算批次及配对指标，`lab_measurements.reports.build_report` 绑定数据修订号。样例见 `examples/sample.json`。
