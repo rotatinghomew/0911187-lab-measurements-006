@@ -7,27 +7,27 @@ from lab_measurements.reports import build_report
 class LabMeasurementTests(unittest.TestCase):
     def setUp(self):
         self.records = [
-            {"id": "a1", "subject": "s1", "batch": "b1", "method": "reference", "replicate": 1, "value": 10},
-            {"id": "a2", "subject": "s1", "batch": "b1", "method": "candidate", "replicate": 1, "value": 8},
-            {"id": "a3", "subject": "s2", "batch": "b1", "method": "reference", "replicate": 1, "value": 20},
-            {"id": "a4", "subject": "s2", "batch": "b1", "method": "candidate", "replicate": 1, "value": None},
-            {"id": "a5", "subject": "s3", "batch": "b2", "method": "reference", "replicate": 1, "value": 100},
+            {"id": "cal-old", "kind": "calibration", "batch": "b1", "version": "v1", "status": "superseded"},
+            {"id": "cal-new", "kind": "calibration", "batch": "b1", "version": "v2", "status": "active"},
+            {"id": "m1", "kind": "measurement", "student_id": "s1", "stage": "研一", "timepoint": "t1", "batch": "b1", "calibration_version": "v1", "status": "valid", "value": 10},
+            {"id": "m2", "kind": "measurement", "student_id": "s1", "stage": "研一", "timepoint": "t1", "batch": "b1", "calibration_version": "v2", "status": "valid", "value": 8},
+            {"id": "m3", "kind": "measurement", "student_id": "s1", "stage": "研二", "timepoint": "t2", "batch": "b1", "calibration_version": "v2", "status": "valid", "value": 6},
+            {"id": "m4", "kind": "measurement", "student_id": "s2", "stage": "研一", "timepoint": "t1", "batch": "b1", "calibration_version": "v2", "status": "invalid", "invalid_reason": "仪器漂移", "value": 99},
         ]
 
-    def test_pairing_uses_only_subjects_with_both_methods(self):
-        result = summarize(self.records)
-        self.assertEqual(result["paired_differences"]["candidate-reference"]["paired_subjects"], 1)
-        self.assertEqual(result["paired_differences"]["candidate-reference"]["mean_difference"], -2)
-
-    def test_batch_distribution_keeps_unequal_sample_counts_visible(self):
-        result = summarize(self.records)
-        self.assertEqual(result["batches"]["reference:b1"]["sample_count"], 2)
-        self.assertEqual(result["batches"]["reference:b2"]["mean"], 100)
-
-    def test_report_identifies_missing_reading_not_zero(self):
+    def test_superseded_calibration_and_invalid_reading_do_not_enter_current_mean(self):
         report = build_report(self.records, "lab-r5")
-        self.assertEqual(report["missing_measurements"], ["a4"])
-        self.assertEqual(report["source_revision"], "lab-r5")
+        self.assertEqual(report["analysis"]["stage_batch"]["研一:b1"]["mean"], 8)
+        self.assertEqual({row["id"] for row in report["excluded_measurements"]}, {"m1", "m4"})
+
+    def test_repeated_readings_remain_within_student_not_independent_students(self):
+        student = summarize(self.records)["repeated_students"]["s1"]
+        self.assertEqual(student["reading_count"], 2)
+        self.assertEqual(student["within_student_change"], -2)
+        self.assertEqual(student["timepoints"], ["t1", "t2"])
+
+    def test_empty_stage_measurement_is_not_reported_as_zero(self):
+        self.assertNotIn("研三:b1", summarize(self.records)["stage_batch"])
 
 
 if __name__ == "__main__":

@@ -1,32 +1,35 @@
-"""分开呈现实验批次分布与受试对象内的配对差异。"""
+"""按训练阶段和设备批次分析有效重复测量。"""
 
 from collections import defaultdict
-from .pairing import paired_values
+
+from .calibration import current_measurements
 
 
 def summarize(records):
-    batches = defaultdict(list)
-    for record in records:
-        key = (str(record["method"]), str(record["batch"]))
-        batches[key].append(record)
-    batch_results = {}
-    for (method, batch), rows in sorted(batches.items()):
+    measurements = current_measurements(records)
+    groups = defaultdict(list)
+    by_student = defaultdict(list)
+    for row in measurements:
+        groups[(str(row["stage"]), str(row["batch"]))].append(row)
+        by_student[str(row["student_id"])].append(row)
+    stage_batch = {}
+    for (stage, batch), rows in sorted(groups.items()):
         values = [float(row["value"]) for row in rows if row.get("value") is not None]
-        batch_results[f"{method}:{batch}"] = {
-            "sample_count": len(rows),
-            "observed_count": len(values),
+        stage_batch[f"{stage}:{batch}"] = {
+            "students": len({row["student_id"] for row in rows}),
+            "readings": len(rows),
+            "observed_values": len(values),
             "mean": sum(values) / len(values) if values else None,
-            "minimum": min(values) if values else None,
-            "maximum": max(values) if values else None,
+            "calibrations": sorted({row["calibration_version"] for row in rows}),
         }
-    methods = sorted({str(row["method"]) for row in records})
-    differences = defaultdict(list)
-    if len(methods) >= 2:
-        for pair in paired_values(records, methods[:2]):
-            values = pair["values"]
-            differences[f"{methods[0]}-{methods[1]}"].append(values[methods[0]] - values[methods[1]])
-    paired_results = {
-        key: {"paired_subjects": len(values), "mean_difference": sum(values) / len(values) if values else None}
-        for key, values in sorted(differences.items())
-    }
-    return {"batches": batch_results, "paired_differences": paired_results}
+    repeated = {}
+    for student, rows in sorted(by_student.items()):
+        ordered = sorted(rows, key=lambda row: (row["timepoint"], row["id"]))
+        values = [float(row["value"]) for row in ordered if row.get("value") is not None]
+        repeated[student] = {
+            "timepoints": sorted({row["timepoint"] for row in ordered}),
+            "reading_count": len(ordered),
+            "within_student_change": values[-1] - values[0] if len(values) >= 2 else None,
+            "batches": sorted({row["batch"] for row in ordered}),
+        }
+    return {"stage_batch": stage_batch, "repeated_students": repeated}

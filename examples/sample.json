@@ -1,7 +1,8 @@
 [
-  {"id":"m-1","subject":"s-01","batch":"b-1","method":"reference","replicate":1,"value":10.2},
-  {"id":"m-2","subject":"s-01","batch":"b-1","method":"candidate","replicate":1,"value":9.6},
-  {"id":"m-3","subject":"s-02","batch":"b-1","method":"reference","replicate":1,"value":13.1},
-  {"id":"m-4","subject":"s-02","batch":"b-1","method":"candidate","replicate":1,"value":null},
-  {"id":"m-5","subject":"s-03","batch":"b-2","method":"reference","replicate":1,"value":18.5}
+  {"id":"cal-1-old","kind":"calibration","batch":"meter-a","version":"c1","status":"superseded"},
+  {"id":"cal-1-current","kind":"calibration","batch":"meter-a","version":"c2","status":"active"},
+  {"id":"read-1","kind":"measurement","student_id":"s-01","stage":"研一","timepoint":"2026-S1","batch":"meter-a","calibration_version":"c1","status":"valid","value":12.4},
+  {"id":"read-2","kind":"measurement","student_id":"s-01","stage":"研一","timepoint":"2026-S1","batch":"meter-a","calibration_version":"c2","status":"valid","value":11.8},
+  {"id":"read-3","kind":"measurement","student_id":"s-01","stage":"研二","timepoint":"2026-S2","batch":"meter-a","calibration_version":"c2","status":"valid","value":10.9},
+  {"id":"read-4","kind":"measurement","student_id":"s-02","stage":"研一","timepoint":"2026-S1","batch":"meter-a","calibration_version":"c2","status":"invalid","invalid_reason":"采集窗口受干扰","value":null}
 ]
